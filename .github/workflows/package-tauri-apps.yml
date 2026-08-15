@@ -33,15 +33,15 @@ jobs:
         shell: bash
         run: |
           mkdir -p release
-          git archive --format=zip --prefix="${APP_NAME}_${VERSION}/" HEAD -o "release/${APP_NAME}_Source_${VERSION}.zip"
-          git archive --format=tar.gz --prefix="${APP_NAME}_${VERSION}/" HEAD -o "release/${APP_NAME}_Source_${VERSION}.tar.gz"
+          git archive --format=zip --prefix="${APP_NAME}_${VERSION}/" HEAD -o "release/Source_${VERSION}.zip"
+          git archive --format=tar.gz --prefix="${APP_NAME}_${VERSION}/" HEAD -o "release/Source_${VERSION}.tar.gz"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Inviska Extract Neo_Source_${{ steps.version.outputs.version }}
+          name: Source_${{ steps.version.outputs.version }}
           path: |
-            release/Inviska Extract Neo_Source_${{ steps.version.outputs.version }}.zip
-            release/Inviska Extract Neo_Source_${{ steps.version.outputs.version }}.tar.gz
+            release/Source_${{ steps.version.outputs.version }}.zip
+            release/Source_${{ steps.version.outputs.version }}.tar.gz
           if-no-files-found: error
 
   macos-arm:
