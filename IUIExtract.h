@@ -27,11 +27,14 @@ class IFileListTree : public QTreeWidget
 {
     Q_DECLARE_TR_FUNCTIONS(IFileListTree)
     QColor m_colPlaceholder;
+    QColor m_colBranch;
 public:
     explicit IFileListTree(QWidget* parent = nullptr);
     void setPlaceholderColor(const QColor & color) { m_colPlaceholder = color; }
+    void setBranchColor(const QColor & color) { m_colBranch = color; viewport()->update(); }
 protected:
     void paintEvent(QPaintEvent* event) override;
+    void drawBranches(QPainter* painter, const QRect & rect, const QModelIndex & index) const override;
 };
 
 
