@@ -11,7 +11,37 @@
 #include "IComUtilityFuncs.h"
 
 
-IFileListTree::IFileListTree(QWidget* parent) : QTreeWidget(parent) {}
+IFileListTree::IFileListTree(QWidget* parent) : QTreeWidget(parent),
+                                                m_colBranch(Qt::black) {}
+
+
+void IFileListTree::drawBranches(QPainter* painter, const QRect & rect, const QModelIndex & index) const
+{
+    if (model()->rowCount(index) == 0)
+        return;
+
+    const int iCenterX = rect.right() - indentation() / 2;
+    const int iCenterY = rect.center().y();
+    QPolygon qpolyBranch;
+    if (isExpanded(index))
+    {
+        qpolyBranch << QPoint(iCenterX - 5, iCenterY - 3)
+                    << QPoint(iCenterX + 5, iCenterY - 3)
+                    << QPoint(iCenterX,     iCenterY + 3);
+    }
+    else
+    {
+        qpolyBranch << QPoint(iCenterX - 3, iCenterY - 5)
+                    << QPoint(iCenterX - 3, iCenterY + 5)
+                    << QPoint(iCenterX + 3, iCenterY);
+    }
+
+    painter->save();
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(m_colBranch);
+    painter->drawPolygon(qpolyBranch);
+    painter->restore();
+}
 
 void IFileListTree::paintEvent(QPaintEvent* event)
 {
@@ -155,6 +185,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
     QString qstrBorder;
     QString qstrButton;
     QString qstrButtonHover;
+    QString qstrButtonText;
     QString qstrButtonDisabled;
     QString qstrButtonDisabledText;
     QString qstrBeginDisabled;
@@ -164,8 +195,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
     QString qstrAccent;
     QString qstrSelection;
     QString qstrSelectionText;
-    QString qstrBranchClosed;
-    QString qstrBranchOpen;
+    QString qstrBranch;
 
     const QString qstrThemeName = NormaliseThemeName(krqstrThemeName);
     if (qstrThemeName == "Light")
@@ -178,6 +208,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         qstrBorder = "#d0d5dd";
         qstrButton = "#e5e7eb";
         qstrButtonHover = "#d9dde3";
+        qstrButtonText = "#3f4752";
         qstrButtonDisabled = "#eceff3";
         qstrButtonDisabledText = "#98a2b3";
         qstrBeginDisabled = "#dde3ec";
@@ -187,8 +218,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         qstrAccent = "#2563eb";
         qstrSelection = "#2563eb";
         qstrSelectionText = "#ffffff";
-        qstrBranchClosed = ":/Resources/BranchClosed.svg";
-        qstrBranchOpen = ":/Resources/BranchOpen.svg";
+        qstrBranch = "#4b5563";
     }
     else if (qstrThemeName == "Dark")
     {
@@ -200,8 +230,9 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         qstrBorder = "#6a6a6a";
         qstrButton = "#555555";
         qstrButtonHover = "#666666";
-        qstrButtonDisabled = "#444444";
-        qstrButtonDisabledText = "#777777";
+        qstrButtonText = "#ffffff";
+        qstrButtonDisabled = "#404040";
+        qstrButtonDisabledText = "#b8b8b8";
         qstrBeginDisabled = "#3a3a3a";
         qstrBeginDisabledText = "#aaaaaa";
         qstrBeginEnabled = "#067DFF";
@@ -209,8 +240,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         qstrAccent = "#1a6b9e";
         qstrSelection = "#1a6b9e";
         qstrSelectionText = "#ffffff";
-        qstrBranchClosed = ":/Resources/BranchClosedLight.svg";
-        qstrBranchOpen = ":/Resources/BranchOpenLight.svg";
+        qstrBranch = "#c8c8c8";
     }
     else
     {
@@ -222,6 +252,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         qstrBorder = "#2e3250";
         qstrButton = "#2f6feb";
         qstrButtonHover = "#5b8af5";
+        qstrButtonText = "#ffffff";
         qstrButtonDisabled = "#252932";
         qstrButtonDisabledText = "#7b82a8";
         qstrBeginDisabled = "#252932";
@@ -231,8 +262,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         qstrAccent = "#4caf7d";
         qstrSelection = "#5b8af5";
         qstrSelectionText = "#ffffff";
-        qstrBranchClosed = ":/Resources/BranchClosedLight.svg";
-        qstrBranchOpen = ":/Resources/BranchOpenLight.svg";
+        qstrBranch = "#c8c8c8";
     }
 
     QPalette qpalExtractPalette = palette();
@@ -252,14 +282,6 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         "}"
         "IUIExtract QTreeWidget {"
         "  border-color: %13;"
-        "}"
-        "IUIExtract QTreeWidget::branch:closed:has-children {"
-        "  image: url(%15);"
-        "  width: 16px;"
-        "}"
-        "IUIExtract QTreeWidget::branch:open:has-children {"
-        "  image: url(%14);"
-        "  width: 16px;"
         "}"
         "IUIExtract QComboBox {"
         "  background-color: %3;"
@@ -284,7 +306,7 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         "}"
         "IUIExtract QPushButton {"
         "  background-color: %7;"
-        "  color: %11;"
+        "  color: %14;"
         "  border: 1px solid %6;"
         "  padding: 2px 8px;"
         "}"
@@ -308,16 +330,23 @@ void IUIExtract::ApplyTheme(const QString & krqstrThemeName)
         "}"
     ).arg(qstrWindow, qstrPanel, qstrField, qstrText, qstrMuted, qstrBorder,
           qstrButton, qstrButtonHover, qstrButtonDisabled, qstrSelection,
-          qstrSelectionText, qstrButtonDisabledText, qstrAccent,
-          qstrBranchClosed, qstrBranchOpen));
+          qstrSelectionText, qstrButtonDisabledText, qstrAccent, qstrButtonText));
 
     m_pqpbBegin->setStyleSheet(
         QString("QPushButton:enabled { background-color: %1; color: #ffffff; border: 1px solid %1; padding: 2px 8px; }"
                 "QPushButton:enabled:hover { background-color: %2; border-color: %2; }"
-                "QPushButton:disabled { background-color: %3; color: %4; border: 1px solid %3; padding: 2px 8px; }")
-        .arg(qstrBeginEnabled, qstrBeginEnabledHover, qstrBeginDisabled, qstrBeginDisabledText));
+                "QPushButton:disabled { background-color: %3; color: %4; border: 1px solid %5; padding: 2px 8px; }")
+        .arg(qstrBeginEnabled, qstrBeginEnabledHover, qstrBeginDisabled, qstrBeginDisabledText, qstrBorder));
+
+    m_pqpbClearList->setStyleSheet(
+        QString("QPushButton:enabled { background-color: %1; color: %2; border: 1px solid %3; padding: 2px 8px; }"
+                "QPushButton:enabled:hover { background-color: %4; color: %2; border-color: %3; }"
+                "QPushButton:disabled { background-color: %5; color: %6; border: 1px solid %3; padding: 2px 8px; }")
+        .arg(qstrButton, qstrButtonText, qstrBorder, qstrButtonHover,
+             qstrButtonDisabled, qstrButtonDisabledText));
 
     m_pqtwFileTree->setPlaceholderColor(QColor(qstrMuted));
+    m_pqtwFileTree->setBranchColor(QColor(qstrBranch));
 }
 
 

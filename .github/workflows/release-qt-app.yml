@@ -35,8 +35,8 @@ jobs:
           VERSION: ${{ steps.resolve.outputs.version }}
         run: |
           APP="Inviska Extract Neo"
-          git archive --format=zip  --prefix="${APP}_${VERSION}/" HEAD -o "${APP}_Source_${VERSION}.zip"
-          git archive --format=tar.gz --prefix="${APP}_${VERSION}/" HEAD -o "${APP}_Source_${VERSION}.tar.gz"
+          git archive --format=zip  --prefix="${APP}_${VERSION}/" HEAD -o "Source_${VERSION}.zip"
+          git archive --format=tar.gz --prefix="${APP}_${VERSION}/" HEAD -o "Source_${VERSION}.tar.gz"
 
       - name: Create release (skip if already exists)
         env:
@@ -44,19 +44,18 @@ jobs:
           TAG: ${{ steps.resolve.outputs.tag }}
           VERSION: ${{ steps.resolve.outputs.version }}
         run: |
-          APP="Inviska Extract Neo"
           if gh release view "${TAG}" &>/dev/null; then
             echo "Release ${TAG} already exists — uploading source archives only"
             gh release upload "${TAG}" \
-              "${APP}_Source_${VERSION}.zip" \
-              "${APP}_Source_${VERSION}.tar.gz" \
+              "Source_${VERSION}.zip" \
+              "Source_${VERSION}.tar.gz" \
               --clobber
           else
             gh release create "${TAG}" \
               --title "Inviska Extract Neo ${TAG}" \
               --generate-notes \
-              "${APP}_Source_${VERSION}.zip" \
-              "${APP}_Source_${VERSION}.tar.gz"
+              "Source_${VERSION}.zip" \
+              "Source_${VERSION}.tar.gz"
           fi
 
   macos-arm:
